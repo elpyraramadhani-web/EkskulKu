@@ -8,23 +8,20 @@ function satuNilai(nilai: string | string[] | undefined) {
   return Array.isArray(nilai) ? nilai[0] : nilai;
 }
 
-export default function KatalogInteraktif({
-  semua,
-  params,
-}: {
-  semua: Ekskul[];
-  params: Params;
-}) {
-  // nilai yang tidak dikenal dianggap "semua" (tidak error)
+export default function KatalogInteraktif({ semua, params }: { semua: Ekskul[]; params: Params }) {
   const kategori =
     DAFTAR_KATEGORI.find((k) => k === satuNilai(params.kategori)) ?? "";
   const hari = DAFTAR_HARI.find((h) => h === satuNilai(params.hari)) ?? "";
+  const sisaSaja = satuNilai(params.sisa) === "1"; // ?sisa=1
 
-  // penyaringan di server, kedua saringan bekerja bersamaan
+  const terisiDari = (id: number) =>
+    pendaftar.filter((p) => p.ekskulId === id).length;
+
   const hasil = semua.filter(
     (e) =>
       (kategori === "" || e.kategori === kategori) &&
-      (hari === "" || e.hari === hari)
+      (hari === "" || e.hari === hari) &&
+      (!sisaSaja || e.kuota - terisiDari(e.id) > 0)
   );
 
   return (
@@ -54,9 +51,15 @@ export default function KatalogInteraktif({
             </option>
           ))}
         </select>
-        <button className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
-          Terapkan
-        </button>
+         <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            name="sisa"
+            value="1"
+            defaultChecked={sisaSaja}
+          />
+          Hanya yang masih ada tempat
+        </label>
       </form>
 
       <p className="mb-3 text-sm text-slate-500">
@@ -71,7 +74,7 @@ export default function KatalogInteraktif({
             <KartuEkskul
               key={e.id}
               ekskul={e}
-              terisi={pendaftar.filter((p) => p.ekskulId === e.id).length}
+              terisi={terisiDari(e.id)}
             />
           ))}
         </div>
