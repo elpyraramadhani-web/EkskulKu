@@ -51,7 +51,7 @@ export default function KatalogInteraktif({ semua, params }: { semua: Ekskul[]; 
             </option>
           ))}
         </select>
-         <label className="flex items-center gap-2">
+                 <label className="flex items-center gap-2">
           <input
             type="checkbox"
             name="sisa"
@@ -60,6 +60,10 @@ export default function KatalogInteraktif({ semua, params }: { semua: Ekskul[]; 
           />
           Hanya yang masih ada tempat
         </label>
+
+        <button className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+          Terapkan
+        </button>
       </form>
 
       <p className="mb-3 text-sm text-slate-500">

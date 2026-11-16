@@ -1,7 +1,7 @@
 "use server";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { jumlahEkskulMurid, MAKS_EKSKUL } from "@/lib/batas";
+import { ekskulYangDiikuti, MAKS_EKSKUL } from "@/lib/batas";
 import { ekskul, pendaftar, tambahPendaftar, JAM_SESI } from "@/data/ekskul";
 
 export type HasilDaftar = {
@@ -66,6 +66,28 @@ export async function daftarEkskul(
     };
   }
 
+  // 1) batas maksimal ekskul per murid
+  const diikuti = ekskulYangDiikuti(nama, kelas);
+
+  // sudah terdaftar di ekskul yang sama
+  if (diikuti.includes(tujuan.nama)) {
+    return {
+      berhasil: false,
+      pesan: `${nama} sudah terdaftar di ${tujuan.nama}.`,
+      galat: {},
+      isian,
+    };
+  }
+
+  if (diikuti.length >= MAKS_EKSKUL) {
+    return {
+      berhasil: false,
+      pesan: `Pendaftaran ditolak: ${nama} sudah mengikuti ${diikuti.length} ekskul (${diikuti.join(", ")}). Satu murid hanya boleh mengikuti maksimal ${MAKS_EKSKUL} ekskul.`,
+      galat: {},
+      isian,
+    };
+  }
+
   // 4. bentrok: murid yang sama sudah ikut ekskul lain di hari dan sesi yang sama
   for (const p of pendaftar) {
     if (!sama(p.nama, nama) || !sama(p.kelas, kelas)) continue;
@@ -83,15 +105,6 @@ export async function daftarEkskul(
         isian,
       };
     }
-  }
-
-    if (jumlahEkskulMurid(nama, kelas) >= MAKS_EKSKUL) {
-    return {
-      berhasil: false,
-      pesan: `${nama} sudah mengikuti ${MAKS_EKSKUL} ekskul. Satu murid hanya boleh mengikuti maksimal ${MAKS_EKSKUL} ekskul.`,
-      galat: {},
-      isian,
-    };
   }
 
   // semua lolos: simpan
